@@ -1,9 +1,12 @@
-import { MartianMono_700Bold } from '@expo-google-fonts/martian-mono';
+import {
+  AtkinsonHyperlegibleMono_400Regular,
+  AtkinsonHyperlegibleMono_700Bold,
+} from '@expo-google-fonts/atkinson-hyperlegible-mono';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Text, TextInput, View } from 'react-native';
 import 'react-native-reanimated';
 
 import { SessionProvider } from '@/components/session-provider';
@@ -13,10 +16,23 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
+Text.defaultProps = Text.defaultProps ?? {};
+Text.defaultProps.style = [
+  { fontFamily: 'AtkinsonHyperlegibleMono_400Regular' },
+  Text.defaultProps.style,
+];
+
+TextInput.defaultProps = TextInput.defaultProps ?? {};
+TextInput.defaultProps.style = [
+  { fontFamily: 'AtkinsonHyperlegibleMono_400Regular' },
+  TextInput.defaultProps.style,
+];
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [fontsLoaded] = useFonts({
-    MartianMono_700Bold,
+    AtkinsonHyperlegibleMono_400Regular,
+    AtkinsonHyperlegibleMono_700Bold,
   });
 
   if (!fontsLoaded) {

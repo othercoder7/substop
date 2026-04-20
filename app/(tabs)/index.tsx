@@ -1,5 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { Fonts } from '@/constants/theme';
 import { useSession } from '@/components/session-provider';
 
 const subscriptions = [
@@ -77,19 +78,20 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: '#80ba9d',
+    fontFamily: Fonts.monoBold,
     fontSize: 13,
-    fontWeight: '700',
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   title: {
     color: '#F8FAFC',
+    fontFamily: Fonts.monoBold,
     fontSize: 30,
-    fontWeight: '800',
     lineHeight: 34,
   },
   subtitle: {
     color: '#D7E9DE',
+    fontFamily: Fonts.sans,
     fontSize: 15,
     lineHeight: 22,
   },
@@ -101,17 +103,18 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     color: '#7C2D12',
+    fontFamily: Fonts.monoBold,
     fontSize: 14,
-    fontWeight: '700',
     textTransform: 'uppercase',
   },
   summaryValue: {
     color: '#111827',
+    fontFamily: Fonts.monoBold,
     fontSize: 36,
-    fontWeight: '800',
   },
   summaryHint: {
     color: '#57534E',
+    fontFamily: Fonts.sans,
     fontSize: 15,
     lineHeight: 21,
   },
@@ -128,11 +131,12 @@ const styles = StyleSheet.create({
   },
   statValue: {
     color: '#111827',
+    fontFamily: Fonts.monoBold,
     fontSize: 22,
-    fontWeight: '800',
   },
   statLabel: {
     color: '#6B7280',
+    fontFamily: Fonts.sans,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -144,8 +148,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: '#111827',
+    fontFamily: Fonts.monoBold,
     fontSize: 18,
-    fontWeight: '700',
   },
   subscriptionRow: {
     alignItems: 'center',
@@ -163,16 +167,17 @@ const styles = StyleSheet.create({
   },
   subscriptionName: {
     color: '#111827',
+    fontFamily: Fonts.monoBold,
     fontSize: 16,
-    fontWeight: '600',
   },
   subscriptionMeta: {
     color: '#6B7280',
+    fontFamily: Fonts.sans,
     fontSize: 13,
   },
   subscriptionAmount: {
     color: '#111827',
+    fontFamily: Fonts.monoBold,
     fontSize: 15,
-    fontWeight: '700',
   },
 });

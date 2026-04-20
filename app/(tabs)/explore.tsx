@@ -1,6 +1,7 @@
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useSession } from '@/components/session-provider';
+import { Fonts } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 
 export default function AccountScreen() {
@@ -57,19 +58,20 @@ const styles = StyleSheet.create({
   },
   label: {
     color: '#6B7280',
+    fontFamily: Fonts.monoBold,
     fontSize: 13,
-    fontWeight: '700',
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   email: {
     color: '#111827',
+    fontFamily: Fonts.monoBold,
     fontSize: 24,
-    fontWeight: '800',
     lineHeight: 30,
   },
   copy: {
     color: '#4B5563',
+    fontFamily: Fonts.sans,
     fontSize: 15,
     lineHeight: 22,
   },
@@ -81,11 +83,12 @@ const styles = StyleSheet.create({
   },
   tipTitle: {
     color: '#1E3A8A',
+    fontFamily: Fonts.monoBold,
     fontSize: 18,
-    fontWeight: '700',
   },
   tipText: {
     color: '#1F2937',
+    fontFamily: Fonts.sans,
     fontSize: 15,
     lineHeight: 21,
   },
@@ -98,7 +101,7 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     color: '#F9FAFB',
+    fontFamily: Fonts.monoBold,
     fontSize: 16,
-    fontWeight: '700',
   },
 });
