@@ -66,9 +66,21 @@ export default function OverviewScreen() {
   }).length;
 
   const stats = [
-    { label: 'Monthly spend', value: formatCurrency(monthlySpend, 'USD') },
-    { label: 'Renewing soon', value: String(renewingSoon) },
-    { label: 'Tracked plans', value: String(activeSubscriptions.length) },
+    {
+      label: 'Monthly spend',
+      value: formatCurrency(monthlySpend, 'USD'),
+      onPress: () => router.push('/monthly-spend'),
+    },
+    {
+      label: 'Renewing soon',
+      value: String(renewingSoon),
+      onPress: () => router.push('/renewing-soon'),
+    },
+    {
+      label: 'Tracked plans',
+      value: String(activeSubscriptions.length),
+      onPress: () => router.push('/tracked-plans'),
+    },
   ];
 
   const topSpacerHeight = Math.max(12, Math.min(Math.round(height * 0.08), 72));
@@ -83,18 +95,25 @@ export default function OverviewScreen() {
         <Text style={styles.summaryHint}>
           {renewingSoon === 0
             ? 'No renewals are due in the next 7 days.'
-            : `${renewingSoon} renewal${renewingSoon === 1 ? '' : 's'} are coming up in the next 7 days.`}
+            : `${renewingSoon} renewal${renewingSoon === 1 ? '' : 's'} coming up in the next 7 days.`}
         </Text>
       </View>
 
       <View style={styles.statsRow}>
         {stats.map((stat) => (
-          <View key={stat.label} style={styles.statCard}>
+          <Pressable
+            key={stat.label}
+            disabled={!stat.onPress}
+            onPress={stat.onPress}
+            style={({ pressed }) => [
+              styles.statCard,
+              pressed && stat.onPress ? styles.statCardPressed : null,
+            ]}>
             <Text adjustsFontSizeToFit minimumFontScale={0.7} numberOfLines={1} style={styles.statValue}>
               {stat.value}
             </Text>
             <Text style={styles.statLabel}>{stat.label}</Text>
-          </View>
+          </Pressable>
         ))}
       </View>
 
@@ -213,6 +232,10 @@ const styles = StyleSheet.create({
     gap: 6,
     minWidth: 0,
     padding: 16,
+  },
+  statCardPressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.985 }],
   },
   statValue: {
     color: '#111827',
