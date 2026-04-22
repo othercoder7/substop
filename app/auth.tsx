@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 
+import { Fonts } from '@/constants/theme';
 import { useSession } from '@/components/session-provider';
 import { supabase } from '@/lib/supabase';
 
@@ -326,7 +327,7 @@ const styles = StyleSheet.create({
     marginBottom: 44,
   },
   wordmark: {
-    fontFamily: 'AtkinsonHyperlegibleMono_700Bold',
+    fontFamily: Fonts.monoBold,
     fontSize: 26,
     letterSpacing: -1,
   },
@@ -344,13 +345,13 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     color: '#E5E7EB',
-    fontFamily: 'AtkinsonHyperlegibleMono_400Regular',
+    fontFamily: Fonts.sans,
     fontSize: 13,
     paddingLeft: 4,
   },
   recoveryTitle: {
     color: '#F8FAFC',
-    fontFamily: 'AtkinsonHyperlegibleMono_700Bold',
+    fontFamily: Fonts.monoBold,
     fontSize: 22,
     marginBottom: 4,
     textAlign: 'center',
@@ -361,7 +362,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     color: '#111827',
-    fontFamily: 'AtkinsonHyperlegibleMono_400Regular',
+    fontFamily: Fonts.sans,
     fontSize: 16,
     minHeight: 54,
     paddingHorizontal: 16,
@@ -376,12 +377,12 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     color: '#FFFFFF',
-    fontFamily: 'AtkinsonHyperlegibleMono_700Bold',
+    fontFamily: Fonts.monoBold,
     fontSize: 17,
   },
   secondaryLink: {
     color: '#E5E7EB',
-    fontFamily: 'AtkinsonHyperlegibleMono_400Regular',
+    fontFamily: Fonts.sans,
     fontSize: 15,
     paddingTop: 6,
     textAlign: 'center',
@@ -406,7 +407,7 @@ const styles = StyleSheet.create({
   },
   outlineButtonText: {
     color: '#3B7C60',
-    fontFamily: 'AtkinsonHyperlegibleMono_700Bold',
+    fontFamily: Fonts.monoBold,
     fontSize: 13,
     letterSpacing: 0.2,
     textAlign: 'center',

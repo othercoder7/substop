@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Text, TextInput, View } from 'react-native';
 import 'react-native-reanimated';
 
+import { Fonts } from '@/constants/theme';
 import { SessionProvider } from '@/components/session-provider';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -17,16 +18,10 @@ export const unstable_settings = {
 };
 
 Text.defaultProps = Text.defaultProps ?? {};
-Text.defaultProps.style = [
-  { fontFamily: 'AtkinsonHyperlegibleMono_400Regular' },
-  Text.defaultProps.style,
-];
+Text.defaultProps.style = [{ fontFamily: Fonts.sans }, Text.defaultProps.style];
 
 TextInput.defaultProps = TextInput.defaultProps ?? {};
-TextInput.defaultProps.style = [
-  { fontFamily: 'AtkinsonHyperlegibleMono_400Regular' },
-  TextInput.defaultProps.style,
-];
+TextInput.defaultProps.style = [{ fontFamily: Fonts.sans }, TextInput.defaultProps.style];
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
