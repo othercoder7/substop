@@ -9,6 +9,7 @@ import {
   Pressable,
   SafeAreaView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -16,7 +17,7 @@ import {
 
 import { Fonts } from '@/constants/theme';
 import { useSession } from '@/components/session-provider';
-import { supabase } from '@/lib/supabase';
+import { getRememberSessionPreference, setRememberSessionEnabled, supabase } from '@/lib/supabase';
 
 export default function AuthScreen() {
   const { loading, session } = useSession();
@@ -29,6 +30,16 @@ export default function AuthScreen() {
   const [recoveryChecked, setRecoveryChecked] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [keepMeLoggedIn, setKeepMeLoggedIn] = useState(true);
+
+  useEffect(() => {
+    async function loadRememberPreference() {
+      const enabled = await getRememberSessionPreference();
+      setKeepMeLoggedIn(enabled);
+    }
+
+    void loadRememberPreference();
+  }, []);
 
   useEffect(() => {
     const tokenHash = typeof params.token_hash === 'string' ? params.token_hash : undefined;
@@ -80,6 +91,8 @@ export default function AuthScreen() {
     setSubmitting(true);
 
     try {
+      await setRememberSessionEnabled(keepMeLoggedIn);
+
       if (mode === 'sign-in') {
         const { error } = await supabase.auth.signInWithPassword({
           email: trimmedEmail,
@@ -262,6 +275,17 @@ export default function AuthScreen() {
                     />
                   </View>
 
+                  <View style={styles.toggleRow}>
+                    <Text style={styles.toggleLabel}>Keep me logged in</Text>
+                    <Switch
+                      onValueChange={setKeepMeLoggedIn}
+                      style={styles.toggle}
+                      thumbColor={keepMeLoggedIn ? '#F9FAFB' : '#E5E7EB'}
+                      trackColor={{ false: '#6B7280', true: '#80ba9d' }}
+                      value={keepMeLoggedIn}
+                    />
+                  </View>
+
                   <Pressable disabled={submitting} onPress={handleSubmit} style={styles.submitButton}>
                     {submitting ? (
                       <ActivityIndicator color="#FFFFFF" />
@@ -348,6 +372,21 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sans,
     fontSize: 13,
     paddingLeft: 4,
+  },
+  toggleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+    paddingTop: 2,
+  },
+  toggleLabel: {
+    color: '#E5E7EB',
+    fontFamily: Fonts.sans,
+    fontSize: 14,
+  },
+  toggle: {
+    transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }],
   },
   recoveryTitle: {
     color: '#F8FAFC',
