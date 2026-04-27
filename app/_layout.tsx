@@ -2,6 +2,7 @@ import {
   AtkinsonHyperlegibleMono_400Regular,
   AtkinsonHyperlegibleMono_700Bold,
 } from '@expo-google-fonts/atkinson-hyperlegible-mono';
+import * as Notifications from 'expo-notifications';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -22,6 +23,15 @@ Text.defaultProps.style = [{ fontFamily: Fonts.sans }, Text.defaultProps.style];
 
 TextInput.defaultProps = TextInput.defaultProps ?? {};
 TextInput.defaultProps.style = [{ fontFamily: Fonts.sans }, TextInput.defaultProps.style];
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -45,6 +55,8 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
           <Stack.Screen name="auth" />
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="email-import" />
+          <Stack.Screen name="email-import-callback" />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style="auto" />

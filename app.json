@@ -28,6 +28,14 @@
     "plugins": [
       "expo-router",
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#80ba9d",
+          "defaultChannel": "renewals"
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
@@ -43,6 +51,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "03685c10-71c9-4a20-9a49-0da168d92f98"
+      }
+    },
+    "owner": "magbeogida"
   }
 }

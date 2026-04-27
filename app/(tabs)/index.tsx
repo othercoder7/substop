@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWi
 
 import { Fonts } from '@/constants/theme';
 import { useSession } from '@/components/session-provider';
+import { syncRenewalNotificationsForCurrentUser } from '@/lib/notifications';
 import {
   categoryAccent,
   formatCurrency,
@@ -42,8 +43,13 @@ export default function OverviewScreen() {
       return;
     }
 
-    setSubscriptions((data ?? []) as Subscription[]);
+    const nextSubscriptions = (data ?? []) as Subscription[];
+    setSubscriptions(nextSubscriptions);
     setLoading(false);
+
+    void syncRenewalNotificationsForCurrentUser().catch((notificationError) => {
+      console.error('Failed to sync renewal notifications', notificationError);
+    });
   }, [session?.user.id]);
 
   useFocusEffect(
