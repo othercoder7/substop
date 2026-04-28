@@ -9,9 +9,11 @@ const authStorageKey = 'substop-auth-token';
 const rememberSessionKey = 'substop-remember-session';
 
 const memoryStorage = new Map<string, string>();
+const canUseWebStorage =
+  Platform.OS === 'web' && typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
 
 async function getRememberSessionEnabled() {
-  if (Platform.OS === 'web') {
+  if (canUseWebStorage) {
     return window.localStorage.getItem(rememberSessionKey) !== 'false';
   }
 
@@ -29,7 +31,7 @@ export async function getRememberSessionPreference() {
 export async function setRememberSessionEnabled(enabled: boolean) {
   const value = enabled ? 'true' : 'false';
 
-  if (Platform.OS === 'web') {
+  if (canUseWebStorage) {
     window.localStorage.setItem(rememberSessionKey, value);
 
     if (!enabled) {
@@ -60,7 +62,7 @@ const storage = {
       return null;
     }
 
-    if (Platform.OS === 'web') {
+    if (canUseWebStorage) {
       return window.localStorage.getItem(key);
     }
 
@@ -76,7 +78,7 @@ const storage = {
       return;
     }
 
-    if (Platform.OS === 'web') {
+    if (canUseWebStorage) {
       window.localStorage.setItem(key, value);
       return;
     }
@@ -88,7 +90,7 @@ const storage = {
     }
   },
   removeItem: async (key: string) => {
-    if (Platform.OS === 'web') {
+    if (canUseWebStorage) {
       window.localStorage.removeItem(key);
       return;
     }

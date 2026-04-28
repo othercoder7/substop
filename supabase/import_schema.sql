@@ -3,22 +3,55 @@
 
 create extension if not exists pgcrypto;
 
-create type public.import_provider as enum (
-  'gmail'
-);
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_type
+    where typname = 'import_provider'
+      and typnamespace = 'public'::regnamespace
+  ) then
+    create type public.import_provider as enum (
+      'gmail'
+    );
+  end if;
+end
+$$;
 
-create type public.import_connection_status as enum (
-  'pending',
-  'connected',
-  'error',
-  'revoked'
-);
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_type
+    where typname = 'import_connection_status'
+      and typnamespace = 'public'::regnamespace
+  ) then
+    create type public.import_connection_status as enum (
+      'pending',
+      'connected',
+      'error',
+      'revoked'
+    );
+  end if;
+end
+$$;
 
-create type public.import_candidate_status as enum (
-  'pending',
-  'approved',
-  'rejected'
-);
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_type
+    where typname = 'import_candidate_status'
+      and typnamespace = 'public'::regnamespace
+  ) then
+    create type public.import_candidate_status as enum (
+      'pending',
+      'approved',
+      'rejected'
+    );
+  end if;
+end
+$$;
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -37,12 +70,20 @@ create table if not exists public.import_connections (
   status public.import_connection_status not null default 'pending',
   connected_email text,
   external_account_id text,
+  access_token text,
+  refresh_token text,
+  token_expires_at timestamptz,
   scopes text[] not null default array[]::text[],
   last_synced_at timestamptz,
   error_message text,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
+
+alter table public.import_connections
+  add column if not exists access_token text,
+  add column if not exists refresh_token text,
+  add column if not exists token_expires_at timestamptz;
 
 create unique index if not exists import_connections_user_provider_email_idx
   on public.import_connections (user_id, provider, connected_email);

@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -52,12 +52,20 @@ function getErrorMessage(error: unknown) {
 }
 
 export default function AddSubscriptionScreen() {
-  const [name, setName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [renewalDate, setRenewalDate] = useState(todayString());
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
+  const params = useLocalSearchParams<{
+    name?: string;
+    amount?: string;
+    renewalDate?: string;
+    billingCycle?: BillingCycle;
+    notes?: string;
+    sourceCandidateId?: string;
+  }>();
+  const [name, setName] = useState(params.name ?? '');
+  const [amount, setAmount] = useState(params.amount ?? '');
+  const [renewalDate, setRenewalDate] = useState(params.renewalDate ?? todayString());
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>(params.billingCycle ?? 'monthly');
   const [category, setCategory] = useState<SubscriptionCategory>('other');
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState(params.notes ?? '');
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
@@ -109,6 +117,17 @@ export default function AddSubscriptionScreen() {
         throw error;
       }
 
+      if (params.sourceCandidateId) {
+        const { error: candidateError } = await supabase
+          .from('import_candidates')
+          .update({ status: 'approved' })
+          .eq('id', params.sourceCandidateId);
+
+        if (candidateError) {
+          throw candidateError;
+        }
+      }
+
       router.replace('/(tabs)');
     } catch (error) {
       const message = getErrorMessage(error);
@@ -128,7 +147,9 @@ export default function AddSubscriptionScreen() {
             <Text style={styles.kicker}>New subscription</Text>
             <Text style={styles.title}>Add a subscription to track.</Text>
             <Text style={styles.subtitle}>
-              Keep this first version simple. You can always edit details later.
+              {params.sourceCandidateId
+                ? 'We prefilled this from an import suggestion. Adjust anything before saving.'
+                : 'Keep this first version simple. You can always edit details later.'}
             </Text>
           </View>
 

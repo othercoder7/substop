@@ -16,8 +16,11 @@ import {
 import { useSession } from '@/components/session-provider';
 import { Fonts } from '@/constants/theme';
 import {
+  createSubscriptionFromImportCandidate,
   fetchImportCandidates,
   fetchImportConnections,
+  rejectImportCandidate,
+  syncImportConnection,
   type ImportCandidate,
   type ImportConnection,
 } from '@/lib/email-import';
@@ -29,6 +32,8 @@ export default function EmailImportScreen() {
   const { height } = useWindowDimensions();
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
+  const [syncingConnectionId, setSyncingConnectionId] = useState<string | null>(null);
+  const [actingCandidateId, setActingCandidateId] = useState<string | null>(null);
   const [connections, setConnections] = useState<ImportConnection[]>([]);
   const [candidates, setCandidates] = useState<ImportCandidate[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -70,19 +75,10 @@ export default function EmailImportScreen() {
       return;
     }
 
-    const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
-
-    if (!apiBaseUrl) {
-      Alert.alert(
-        'Missing API base URL',
-        'Set EXPO_PUBLIC_API_BASE_URL before connecting Gmail so the OAuth route can be reached.'
-      );
-      return;
-    }
-
     setConnecting(true);
 
     try {
+      const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL ?? '';
       const appRedirectUri = Linking.createURL('/email-import-callback');
       const response = await fetch(
         `${apiBaseUrl}/api/email-import/google/start?app_redirect_uri=${encodeURIComponent(appRedirectUri)}`,
@@ -94,7 +90,19 @@ export default function EmailImportScreen() {
       );
 
       if (!response.ok) {
-        throw new Error('Could not start Gmail connection.');
+        const responseText = await response.text();
+
+        try {
+          const payload = JSON.parse(responseText) as { error?: string };
+          throw new Error(payload.error ?? `Could not start Gmail connection. (${response.status})`);
+        } catch {
+          const snippet = responseText.trim().slice(0, 180);
+          throw new Error(
+            snippet.length > 0
+              ? `Could not start Gmail connection. (${response.status}) ${snippet}`
+              : `Could not start Gmail connection. (${response.status})`
+          );
+        }
       }
 
       const data = (await response.json()) as { authUrl?: string; error?: string };
@@ -109,6 +117,84 @@ export default function EmailImportScreen() {
       Alert.alert('Could not connect Gmail', message);
     } finally {
       setConnecting(false);
+    }
+  }
+
+  async function handleSyncConnection(connectionId: string) {
+    if (!session?.access_token || syncingConnectionId) {
+      return;
+    }
+
+    setSyncingConnectionId(connectionId);
+
+    try {
+      const result = await syncImportConnection(connectionId, session.access_token);
+      await loadImportState();
+      Alert.alert(
+        'Inbox scanned',
+        `Scanned ${result.scannedCount} email${result.scannedCount === 1 ? '' : 's'} and found ${result.candidateCount} likely subscription${result.candidateCount === 1 ? '' : 's'}.`
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Something went wrong.';
+      Alert.alert('Could not scan Gmail', message);
+    } finally {
+      setSyncingConnectionId(null);
+    }
+  }
+
+  async function handleApproveCandidate(candidate: ImportCandidate) {
+    if (actingCandidateId) {
+      return;
+    }
+
+    if (candidate.amount == null || !candidate.renewal_date) {
+      router.push({
+        pathname: '/add-subscription',
+        params: {
+          name: candidate.merchant_name,
+          amount: candidate.amount != null ? String(candidate.amount) : '',
+          renewalDate: candidate.renewal_date ?? '',
+          billingCycle: candidate.billing_cycle ?? 'monthly',
+          notes: candidate.raw_subject ?? candidate.raw_snippet ?? '',
+          sourceCandidateId: candidate.id,
+        },
+      });
+      return;
+    }
+
+    setActingCandidateId(candidate.id);
+
+    try {
+      await createSubscriptionFromImportCandidate(candidate, {
+        amount: Number(candidate.amount),
+        renewalDate: candidate.renewal_date,
+        billingCycle: candidate.billing_cycle,
+      });
+      await loadImportState();
+      Alert.alert('Subscription added', `${candidate.merchant_name} was added to your subscriptions.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Something went wrong.';
+      Alert.alert('Could not add subscription', message);
+    } finally {
+      setActingCandidateId(null);
+    }
+  }
+
+  async function handleRejectCandidate(candidateId: string) {
+    if (actingCandidateId) {
+      return;
+    }
+
+    setActingCandidateId(candidateId);
+
+    try {
+      await rejectImportCandidate(candidateId);
+      await loadImportState();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Something went wrong.';
+      Alert.alert('Could not reject suggestion', message);
+    } finally {
+      setActingCandidateId(null);
     }
   }
 
@@ -165,7 +251,27 @@ export default function EmailImportScreen() {
                 <Text style={styles.rowMeta}>
                   {connection.provider.toUpperCase()} • {connection.status}
                 </Text>
+                {connection.last_synced_at ? (
+                  <Text style={styles.rowMeta}>Last scan: {connection.last_synced_at.slice(0, 10)}</Text>
+                ) : null}
+                {connection.error_message ? (
+                  <Text selectable style={styles.errorText}>
+                    {connection.error_message}
+                  </Text>
+                ) : null}
               </View>
+              {connection.status === 'connected' ? (
+                <Pressable
+                  disabled={syncingConnectionId === connection.id}
+                  onPress={() => handleSyncConnection(connection.id)}
+                  style={styles.inlineButton}>
+                  {syncingConnectionId === connection.id ? (
+                    <ActivityIndicator color="#10231A" />
+                  ) : (
+                    <Text style={styles.inlineButtonText}>Scan inbox</Text>
+                  )}
+                </Pressable>
+              ) : null}
             </View>
           ))
         )}
@@ -194,6 +300,34 @@ export default function EmailImportScreen() {
                   : 'Amount unknown'}
                 {candidate.renewal_date ? ` • ${candidate.renewal_date}` : ''}
               </Text>
+              {candidate.raw_subject ? (
+                <Text numberOfLines={2} style={styles.stateSubtext}>
+                  {candidate.raw_subject}
+                </Text>
+              ) : null}
+              <Text style={styles.statusBadge}>{candidate.status.toUpperCase()}</Text>
+              {candidate.status === 'pending' ? (
+                <View style={styles.candidateActions}>
+                  <Pressable
+                    disabled={actingCandidateId === candidate.id}
+                    onPress={() => handleApproveCandidate(candidate)}
+                    style={styles.inlineButton}>
+                    {actingCandidateId === candidate.id ? (
+                      <ActivityIndicator color="#10231A" />
+                    ) : (
+                      <Text style={styles.inlineButtonText}>
+                        {candidate.amount != null && candidate.renewal_date ? 'Add subscription' : 'Review details'}
+                      </Text>
+                    )}
+                  </Pressable>
+                  <Pressable
+                    disabled={actingCandidateId === candidate.id}
+                    onPress={() => handleRejectCandidate(candidate.id)}
+                    style={styles.rejectButton}>
+                    <Text style={styles.rejectButtonText}>Reject</Text>
+                  </Pressable>
+                </View>
+              ) : null}
             </View>
           ))
         )}
@@ -284,6 +418,7 @@ const styles = StyleSheet.create({
   row: {
     backgroundColor: '#F9FAFB',
     borderRadius: 18,
+    gap: 12,
     padding: 14,
   },
   rowCopy: {
@@ -300,11 +435,33 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
+  errorText: {
+    color: '#B91C1C',
+    fontFamily: Fonts.sans,
+    fontSize: 13,
+    lineHeight: 18,
+  },
   candidateCard: {
     backgroundColor: '#F9FAFB',
     borderRadius: 18,
     gap: 4,
     padding: 14,
+  },
+  candidateActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+  },
+  statusBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#E5E7EB',
+    borderRadius: 999,
+    color: '#374151',
+    fontFamily: Fonts.monoBold,
+    fontSize: 11,
+    overflow: 'hidden',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   secondaryButton: {
     alignItems: 'center',
@@ -319,5 +476,33 @@ const styles = StyleSheet.create({
     color: '#111827',
     fontFamily: Fonts.monoBold,
     fontSize: 13,
+  },
+  inlineButton: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#80ba9d',
+    borderRadius: 999,
+    justifyContent: 'center',
+    minHeight: 40,
+    paddingHorizontal: 14,
+  },
+  inlineButtonText: {
+    color: '#10231A',
+    fontFamily: Fonts.monoBold,
+    fontSize: 12,
+  },
+  rejectButton: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#FEE2E2',
+    borderRadius: 999,
+    justifyContent: 'center',
+    minHeight: 40,
+    paddingHorizontal: 14,
+  },
+  rejectButtonText: {
+    color: '#991B1B',
+    fontFamily: Fonts.monoBold,
+    fontSize: 12,
   },
 });

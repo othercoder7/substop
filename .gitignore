@@ -6,6 +6,7 @@ node_modules/
 # Expo
 .expo/
 dist/
+dist-hosting/
 web-build/
 expo-env.d.ts
 
@@ -33,6 +34,11 @@ yarn-error.*
 # local env files
 .env
 .env*.local
+*credentials.json
+google cloud credentials.json
+
+# EAS
+.eas
 
 # typescript
 *.tsbuildinfo

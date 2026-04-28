@@ -73,6 +73,8 @@ export async function GET(request: Request) {
 
     const tokenPayload = (await tokenResponse.json()) as {
       access_token?: string;
+      refresh_token?: string;
+      expires_in?: number;
       scope?: string;
       error?: string;
       error_description?: string;
@@ -130,6 +132,9 @@ export async function GET(request: Request) {
         status: 'connected',
         connected_email: profilePayload.emailAddress,
         external_account_id: profilePayload.historyId ?? profilePayload.emailAddress,
+        access_token: tokenPayload.access_token,
+        refresh_token: tokenPayload.refresh_token ?? null,
+        token_expires_at: new Date(Date.now() + (tokenPayload.expires_in ?? 3600) * 1000).toISOString(),
         scopes,
         last_synced_at: new Date().toISOString(),
         error_message: null,
